@@ -1,4 +1,4 @@
-# MD to Keynote
+# Markdown to Keynote
 
 A plugin that lets Claude build Keynote slides for you.
 

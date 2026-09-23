@@ -5,7 +5,7 @@ metadata:
   version: "1"
 ---
 
-# Keynote Slide Builder
+# Markdown to Keynote
 
 Build Keynote presentations using the Keynote MCP server (`md-to-keynote-mcp`) bundled
 with this plugin (tools appear as `mcp__md-to-keynote-mcp__*`), which sets text
