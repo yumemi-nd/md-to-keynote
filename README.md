@@ -109,8 +109,10 @@ Then:
   some environments; the skill prefers `export_slide_images` (per-slide
   JPEG export) instead.
 
-## Support
+## Credits & Support
 
-If this plugin saves you time, you can buy me a coffee.
+- Inspired by [ByAxe/keynote-mcp](https://github.com/ByAxe/keynote-mcp)
+(a fork of [easychen/keynote-mcp](https://github.com/easychen/keynote-mcp)).
 
-<a href="https://www.buymeacoffee.com/n__yumemi" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me a Coffee" height="40"></a>
+- If this plugin saves you time, you can buy me a coffee.
+  - <a href="https://www.buymeacoffee.com/n__yumemi" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me a Coffee" height="40"></a>
