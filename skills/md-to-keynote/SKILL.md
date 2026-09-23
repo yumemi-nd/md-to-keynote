@@ -1,5 +1,5 @@
 ---
-name: keynote-slide-builder
+name: md-to-keynote
 description: This skill should be used when the user asks to "build a Keynote deck", "create Keynote slides", "make a .key presentation", "update my Keynote deck", or wants a Keynote deck generated from a Marp-like slides.md file, without manually tuning font sizes or text-box positions. Requires macOS with Keynote.app and the bundled Keynote MCP server (md-to-keynote-mcp).
 metadata:
   version: "1"
@@ -48,12 +48,12 @@ deck-wide policy and, optionally, each slide's content:
   (`generate`). A slide can override the deck-wide mode with
   `<!-- mode: ... -->`.
 
-See `references/slides-guide.md` for the full spec (frontmatter keys and
+See `slides-guide.md` in this skill's folder for the full spec (frontmatter keys and
 defaults, `output` resolution, slide separators, layout roles and the
 role→layout mapping, where `##` subtitles go, `generate` rules including
 title-only slides, and layout auto-inference). If no `slides.md` exists,
-point the user at the template `references/slides.md` to copy into their
-folder and fill in, or ask directly for the frontmatter fields.
+point the user at the template `slides.md` in this skill's folder to copy
+into their folder and fill in, or ask directly for the frontmatter fields.
 
 ## 2. Plan the deck
 
@@ -74,7 +74,7 @@ Never overwrite without asking. `create_presentation` and `save_as`
 refuse existing paths unless `overwrite=true`.
 
 **Content** — if `slides.md` has slides after the frontmatter, parse them
-per `references/slides-guide.md` and resolve each slide's mode — a mode
+per `slides-guide.md` and resolve each slide's mode — a mode
 the user gave in chat overrides the frontmatter `mode`, and a slide's own
 `<!-- mode: ... -->` overrides both.
 

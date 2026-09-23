@@ -46,7 +46,7 @@ To update to a new version later, run
 
 ## Quick start
 
-1. Download the template [`slides.md`](https://github.com/yumemi-nd/md-to-keynote/blob/main/skills/keynote-slide-builder/references/slides.md)
+1. Download the template [`slides.md`](https://github.com/yumemi-nd/md-to-keynote/blob/main/skills/md-to-keynote/slides.md)
    and put it in your project folder.
 2. Set `theme` at the top to a theme name exactly as it appears in
    Keynote's theme chooser (e.g. `Basic White`, or `ベーシックホワイト` if
@@ -74,7 +74,7 @@ To change the mode or layout of a single slide, put `<!-- mode: generate -->`
 or `<!-- layout: section -->` at the top of that slide.
 
 For every setting, layout name, and rule, see the
-[full guide](https://github.com/yumemi-nd/md-to-keynote/blob/main/skills/keynote-slide-builder/references/slides-guide.md).
+[full guide](https://github.com/yumemi-nd/md-to-keynote/blob/main/skills/md-to-keynote/slides-guide.md).
 
 ## Updating a deck
 
