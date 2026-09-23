@@ -113,4 +113,4 @@ Then:
 
 If this plugin saves you time, you can buy me a coffee.
 
-<a href="https://www.buymeacoffee.com/n__yumemi" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me a Coffee" style="height: 40px !important;width: auto !important;" ></a>
+<a href="https://www.buymeacoffee.com/n__yumemi" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me a Coffee" height="40"></a>
