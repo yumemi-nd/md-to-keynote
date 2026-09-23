@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "keynote-builder-mcp": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--with", "mcp<2.0.0",
+        "${CLAUDE_PLUGIN_ROOT}/mcp-server/keynote_slides_server.py"
+      ]
+    }
+  }
+}
