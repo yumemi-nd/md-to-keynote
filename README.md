@@ -68,11 +68,11 @@ Choose how the text is written with `mode`:
 
 | You want to… | Do this |
 |---|---|
-| Write the final text yourself | `mode: verbatim` (default). Claude uses your text as written. |
-| Write notes and let Claude write the text | `mode: generate`. Claude writes each slide from your notes and never invents facts — gaps get a `[TODO: …]` placeholder. |
+| Write notes and let Claude write the text | `mode: generate` (default). Claude writes each slide from your notes and never invents facts — gaps get a `[TODO: …]` placeholder. |
+| Write the final text yourself | `mode: verbatim`. Claude uses your text as written. |
 | Let Claude write the whole deck | Delete the example slides and describe the deck in `request`. |
 
-To change the mode or layout of a single slide, put `<!-- mode: generate -->`
+To change the mode or layout of a single slide, put `<!-- mode: verbatim -->`
 or `<!-- layout: section -->` at the top of that slide.
 
 For every setting, layout name, and rule, see the

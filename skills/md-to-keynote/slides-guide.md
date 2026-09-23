@@ -15,7 +15,7 @@ If a `.key` with the same name already exists at the save location, Claude asks 
 
 ```markdown
 ---
-mode: verbatim
+mode: generate
 theme: Basic White
 output: presentation.key
 layout_policy: auto-select based on content
@@ -30,6 +30,7 @@ request:
 
 ---
 <!-- layout: body -->
+<!-- mode: verbatim -->
 
 # What It Does
 ## Three key points
@@ -42,7 +43,6 @@ request:
 # Next Section
 
 ---
-<!-- mode: generate -->
 
 # Benefits
 - less work time, consistent design
@@ -63,7 +63,7 @@ Settings left blank use the "If blank" behavior.
 
 | Key | What to write | If blank |
 |---|---|---|
-| `mode` | How slide content is handled: `verbatim` or `generate` (see "Modes" below) | `verbatim` |
+| `mode` | How slide content is handled: `generate` or `verbatim` (see "Modes" below) | `generate` |
 | `theme` | The theme name exactly as shown in Keynote's theme chooser (it depends on Keynote's language, e.g. `Basic White` / `ベーシックホワイト`) | Claude asks |
 | `output` | Where to save the `.key`: a path starting with `/Users/…`, or a path relative to `slides.md` (e.g. `presentation.key`, `out/presentation.key`) | Saved next to `slides.md`, named after the cover title |
 | `layout_policy` | Which layouts to use for which slides | Auto-select based on content |
@@ -81,7 +81,7 @@ Settings left blank use the "If blank" behavior.
 | `- item` or `* item` | One bullet |
 | `![description](image path)` | Places an image on the slide |
 | `<!-- layout: role -->` | Sets the slide's layout (put it at the top of the slide) |
-| `<!-- mode: generate -->` | Changes the mode for this slide only (put it at the top of the slide) |
+| `<!-- mode: verbatim -->` | Changes the mode for this slide only (put it at the top of the slide) |
 
 ### Specifying layouts
 
@@ -105,12 +105,12 @@ If omitted, a layout is chosen automatically based on the content.
 
 | Mode | Behavior | Best when |
 |---|---|---|
+| `generate` (default) | Your content is treated as notes, and **Claude writes the text** | You only have key points or keywords |
 | `verbatim` | Your text goes onto the slide **as written** | Your text is final |
-| `generate` | Your content is treated as notes, and **Claude writes the text** | You only have key points or keywords |
 
 - **Whole deck**: change `mode` in the settings
 - **One slide**: put `<!-- mode: generate -->` or `<!-- mode: verbatim -->` at the top of that slide
-- **In chat**: ask, e.g., "Build it in generate mode"
+- **In chat**: ask, e.g., "Build it in verbatim mode"
 
 When several are given, priority is **per-slide setting → chat instruction → settings `mode`**.
 
@@ -155,7 +155,7 @@ Decide from the slot info in `list_layouts()` and each slide's `list_slide_items
 
 ### Resolving the mode
 
-Per-slide `<!-- mode: ... -->` > chat instruction > settings `mode` > default `verbatim`.
+Per-slide `<!-- mode: ... -->` > chat instruction > settings `mode` > default `generate`.
 
 ### verbatim slides
 

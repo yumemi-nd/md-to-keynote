@@ -37,7 +37,7 @@ obvious) for **`slides.md`** — a single Marp-like file that holds both the
 deck-wide policy and, optionally, each slide's content:
 
 - **Frontmatter** (between the first two `---` lines): `mode`
-  (`verbatim` or `generate`, default `verbatim`), `theme` (must match
+  (`generate` or `verbatim`, default `generate`), `theme` (must match
   Keynote's theme chooser exactly), `output` (where to save the `.key`),
   `layout_policy`, `text_rules`, `assets`, `color`, and `request` (topic,
   audience, tone — used for `generate` slides and when there are no slides

@@ -6,10 +6,10 @@
 # Write each setting on one line as `key: value`.
 
 # mode sets how slides are generated.
-#   verbatim … your text goes onto the slides as written
 #   generate … Claude writes each slide's text from what you wrote
-# To change only one slide, put e.g. <!-- mode: generate --> at the top of that slide.
-mode: verbatim
+#   verbatim … your text goes onto the slides as written
+# To change only one slide, put e.g. <!-- mode: verbatim --> at the top of that slide.
+mode: generate
 
 # One Keynote theme name, as shown in your Keynote's language
 # (e.g. Basic White / ベーシックホワイト). Your own themes work too.
@@ -43,13 +43,13 @@ request:
 
 ---
 <!-- layout: body -->
+<!-- mode: verbatim -->
 
 # Title
 ## Subtitle (delete this line if not needed)
 - This slide uses exactly what you wrote
 
 ---
-<!-- mode: generate -->
 
 # Keynote themes make decks efficient and beautiful
 - Claude writes the content of this slide
@@ -58,7 +58,6 @@ request:
 - You can also reapply the theme's styles to a slide
 
 ---
-<!-- mode: generate -->
 
 # In generate, key points get you the result you want
 - Write key points as bullets, and Claude writes the text from them
