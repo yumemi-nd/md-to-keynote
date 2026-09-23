@@ -46,8 +46,8 @@ To update to a new version later, run
 
 ## Quick start
 
-1. Download [`slides-template.md`](https://github.com/yumemi-nd/keynote-builder/blob/main/skills/keynote-slide-builder/references/slides-template.md),
-   put it in your project folder, and rename it to `slides.md`.
+1. Download the template [`slides.md`](https://github.com/yumemi-nd/keynote-builder/blob/main/skills/keynote-slide-builder/references/slides.md)
+   and put it in your project folder.
 2. Set `theme` at the top to a theme name exactly as it appears in
    Keynote's theme chooser (e.g. `Basic White`, or `ベーシックホワイト` if
    Keynote is in Japanese). Replace the example slides with your own.

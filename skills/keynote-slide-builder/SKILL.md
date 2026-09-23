@@ -52,8 +52,8 @@ See `references/slides-guide.md` for the full spec (frontmatter keys and
 defaults, `output` resolution, slide separators, layout roles and the
 role→layout mapping, where `##` subtitles go, `generate` rules including
 title-only slides, and layout auto-inference). If no `slides.md` exists,
-point the user at `references/slides-template.md` to copy into their folder
-as `slides.md` and fill in, or ask directly for the frontmatter fields.
+point the user at the template `references/slides.md` to copy into their
+folder and fill in, or ask directly for the frontmatter fields.
 
 ## 2. Plan the deck
 

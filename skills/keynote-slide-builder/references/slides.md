@@ -1,6 +1,6 @@
 ---
-# Copy this file into your project folder, rename it `slides.md`,
-# edit it, then ask Claude: "Build a Keynote deck from this slides.md".
+# Copy this file into your project folder, edit it,
+# then ask Claude: "Build a Keynote deck from this slides.md".
 # See slides-guide.md in the same folder for the full syntax.
 #
 # Write each setting on one line as `key: value`.

@@ -5,7 +5,7 @@ One file holds both the deck-wide settings (theme, text limits, save location, e
 
 ## How to use
 
-1. Copy `slides-template.md` from this folder into your working folder and rename it `slides.md`
+1. Copy the template `slides.md` from this folder into your working folder
 2. Edit the settings at the top and each slide's content
 3. Ask Claude: "Build a Keynote deck from this slides.md"
 
