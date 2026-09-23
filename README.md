@@ -14,6 +14,8 @@ A plugin that lets Claude build Keynote slides for you.
 > - **Safe to edit afterwards**
 >    - If you make changes in Keynote and run it again, you can choose to update the deck while keeping your changes, or rebuild it. Nothing is overwritten without your confirmation.
 
+https://github.com/user-attachments/assets/b0567bd0-68bc-4ab2-bd90-ece39d98b4b2
+
 ## Requirements
 
 - A Mac with **Keynote** installed
