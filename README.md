@@ -1,7 +1,22 @@
 # Keynote Builder
 
+A plugin that lets Claude build Keynote slides for you.
+
+> [!NOTE]
+> - **Just write Markdown**
+>    - Write your slide content in `slides.md` and tell Claude "Build a Keynote deck from this file" — Claude creates the slides for you.
+> - **Works with your theme**
+>    - Text goes into the theme's own title and body placeholders, so fonts, colors, and bullet styles stay intact. "Reapply Layout to Slide" works too.
+> - **Three ways to write**
+>    - Write it all yourself
+>    - Write notes per slide and let Claude write from them
+>    - Pick a topic and let Claude write the whole deck
+> - **Safe to edit afterwards**
+>    - If you make changes in Keynote and run it again, you can choose to update the deck while keeping your changes, or rebuild it. Nothing is overwritten without your confirmation.
+
+<br>
 Build Keynote (`.key`) decks by chat, using the theme's real registered
-title/body placeholders instead of freeform text boxes — so slides inherit
+title/body placeholders — so slides inherit
 the theme's fonts, colors, and bullet styles automatically, with no manual
 font-size or position tuning.
 
@@ -93,3 +108,9 @@ Then:
 - PDF export (`export_pdf`) has been unreliable for visual verification in
   some environments; the skill prefers `export_slide_images` (per-slide
   JPEG export) instead.
+
+## Support
+
+If this plugin saves you time, you can buy me a coffee.
+
+<a href="https://www.buymeacoffee.com/n__yumemi" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me a Coffee" style="height: 40px !important;width: auto !important;" ></a>
