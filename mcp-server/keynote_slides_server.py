@@ -10,6 +10,7 @@ colors, and bullet styles automatically.
 
 macOS + Keynote.app only (drives Keynote via AppleScript/osascript).
 """
+import json
 import os
 import subprocess
 import tempfile
@@ -75,6 +76,54 @@ end describeSlide
 '''
 
 
+# Text this server last wrote into the front document, per slide:
+# {"<slide number>": {"title": str, "body": str, "items": {"<item index>": str}}}.
+# Saved next to the .key as a hidden JSON file whenever the deck is saved, so a
+# later update can tell text the user edited in Keynote apart from text we wrote.
+_doc_path: Optional[str] = None
+_record: dict = {}
+
+
+def record_file(key_path: str) -> str:
+    folder, name = os.path.split(os.path.realpath(key_path))
+    return os.path.join(folder, f".{name}.keynote-builder.json")
+
+
+def load_record(key_path: str) -> None:
+    global _doc_path, _record
+    _doc_path = os.path.realpath(key_path)
+    try:
+        with open(record_file(key_path), encoding="utf-8") as f:
+            _record = json.load(f).get("slides", {})
+    except (OSError, ValueError):
+        _record = {}
+
+
+def save_record() -> None:
+    if not _doc_path:
+        return
+    with open(record_file(_doc_path), "w", encoding="utf-8") as f:
+        json.dump({"slides": _record}, f, ensure_ascii=False, indent=1)
+
+
+def remember(slide_number: int, field: str, text: str) -> None:
+    entry = _record.setdefault(str(slide_number), {"items": {}})
+    if field in ("title", "body"):
+        entry[field] = text
+    else:
+        entry.setdefault("items", {})[field] = text
+
+
+def normalize(text: str) -> str:
+    return text.replace("\r\n", "\n").replace("\r", "\n").rstrip()
+
+
+def split_readback(result: str) -> tuple[str, str]:
+    """Split a '<STATUS><FS><text><RS>' AppleScript result into (status, text)."""
+    status, _, rest = result.partition(FS)
+    return status, rest[:rest.rfind(RS)] if RS in rest else rest
+
+
 def run_applescript(script: str) -> str:
     result = subprocess.run(["osascript", "-e", script], capture_output=True, text=True)
     if result.returncode != 0:
@@ -134,6 +183,36 @@ def describe_slide(slide_number: int) -> dict:
     end tell
     ''')
     return parse_slide(parse_records(raw))
+
+
+def describe_all_slides() -> list[dict]:
+    raw = run_applescript(DESCRIBE_HANDLERS + '''
+    tell application "Keynote"
+        set out to ""
+        repeat with s in slides of front document
+            set out to out & my describeSlide(s)
+        end repeat
+        return out
+    end tell
+    ''')
+    groups: list[list[list[str]]] = []
+    for rec in parse_records(raw):
+        if rec[0] == "slide":
+            groups.append([rec])
+        else:
+            groups[-1].append(rec)
+    return [parse_slide(g) for g in groups]
+
+
+def current_texts(s: dict) -> dict:
+    """The slide's current text in the same shape as a _record entry."""
+    out = {"items": {}}
+    for it in s["items"]:
+        if it["role"] in ("title", "body"):
+            out[it["role"]] = it["text"]
+        else:
+            out["items"][str(it["index"])] = it["text"]
+    return out
 
 
 def preview(text: str, limit: int = 40) -> str:
@@ -254,6 +333,8 @@ def create_presentation(title: str, theme: str = "", path: str = "", overwrite: 
         return name of base layout of slide 1 of newDoc
     end tell
     ''')
+    global _doc_path, _record
+    _doc_path, _record = None, {"1": {"items": {}}}
     msg = f"Created presentation '{title}'" + (f" with theme '{theme}'" if theme else "")
     if path:
         run_applescript(f'''
@@ -261,6 +342,8 @@ def create_presentation(title: str, theme: str = "", path: str = "", overwrite: 
             save front document in POSIX file "{esc(path)}"
         end tell
         ''')
+        _doc_path = os.path.realpath(path)
+        save_record()
         msg += f", saved to {path}" + (" (replaced the existing file)" if overwrite else "")
     msg += (f". Slide 1 already exists (layout: {layout}) — fill it with set_title/set_body instead of add_slide, "
             f"and change its layout with set_slide_layout if needed. The next add_slide creates slide 2.")
@@ -269,7 +352,7 @@ def create_presentation(title: str, theme: str = "", path: str = "", overwrite: 
 
 @mcp.tool()
 def open_presentation(path: str) -> str:
-    """Open an existing .key file (absolute POSIX path) and make it the front document, so later tools update it in place instead of rebuilding from the theme. Returns every slide's number, layout, and title."""
+    """Open an existing .key file (absolute POSIX path) and make it the front document, so later tools update it in place instead of rebuilding from the theme. Returns every slide's number, layout, and title. Before changing any text, call find_text_edits to see which text the user rewrote in Keynote."""
     if not os.path.exists(path):
         raise FileNotFoundError(f"No such file: {path}")
     run_applescript(f'''
@@ -278,6 +361,7 @@ def open_presentation(path: str) -> str:
         open POSIX file "{esc(path)}"
     end tell
     ''')
+    load_record(path)
     return "Opened " + path + "\n" + slides_summary()
 
 
@@ -387,6 +471,7 @@ def add_slide(layout: str = "", layout_index: int = 0) -> str:
         end tell
     end tell
     ''')
+    _record.setdefault(out, {"items": {}})
     return f"Added slide #{out} (layout: {note})"
 
 
@@ -403,8 +488,13 @@ def set_placeholder(slide_number: int, which: str, text: str, show: bool) -> str
                     return "HIDDEN" & (character id 31) & (name of base layout)
                 end if
             end if
-            set object text of {item} to "{esc(text)}"
-            return "OK"
+            set newText to "{esc(text)}"
+            considering case
+                set isSame to ((object text of {item}) as string) is newText
+            end considering
+            if isSame then return "SAME" & (character id 31) & newText & (character id 30)
+            set object text of {item} to newText
+            return "OK" & (character id 31) & ((object text of {item}) as string) & (character id 30)
         end tell
     end tell
     ''')
@@ -412,6 +502,10 @@ def set_placeholder(slide_number: int, which: str, text: str, show: bool) -> str
         layout = result.split(FS, 1)[1]
         return (f"NOT WRITTEN: the {which} placeholder is hidden on slide {slide_number} (layout: {layout}), so the text would not appear. "
                 f"Call again with show=true to turn the {which} on, or change the layout with set_slide_layout.")
+    status, written = split_readback(result)
+    remember(slide_number, which, written)
+    if status == "SAME":
+        return f"The {which} on slide {slide_number} already has this text; left it untouched (keeps any formatting the user applied)"
     return f"Set {which} on slide {slide_number}" + (" (turned it on)" if show else "")
 
 
@@ -451,8 +545,13 @@ def set_text_item(slide_number: int, item_index: int, text: str) -> str:
             end try
             set cl to class of t as string
             if cl is not "shape" and cl is not "text item" then return "CLASS" & (character id 31) & cl
-            set object text of t to "{esc(text)}"
-            return "OK"
+            set newText to "{esc(text)}"
+            considering case
+                set isSame to ((object text of t) as string) is newText
+            end considering
+            if isSame then return "SAME" & (character id 31) & newText & (character id 30)
+            set object text of t to newText
+            return "OK" & (character id 31) & ((object text of t) as string) & (character id 30)
         end tell
     end tell
     ''')
@@ -462,6 +561,10 @@ def set_text_item(slide_number: int, item_index: int, text: str) -> str:
         return f"NOT WRITTEN: item {item_index} on slide {slide_number} is the body placeholder. Use set_body instead."
     if result.startswith("CLASS"):
         return f"NOT WRITTEN: item {item_index} on slide {slide_number} is a {result.split(FS, 1)[1]}, which has no text."
+    status, written = split_readback(result)
+    remember(slide_number, str(item_index), written)
+    if status == "SAME":
+        return f"Item {item_index} on slide {slide_number} already has this text; left it untouched (keeps any formatting the user applied)"
     return f"Set text of item {item_index} on slide {slide_number}"
 
 
@@ -564,9 +667,17 @@ def delete_item(slide_number: int, item_index: int) -> str:
         return f"Hid the title placeholder on slide {slide_number}"
     if result == "BODY":
         return f"Hid the body placeholder on slide {slide_number}"
+    items = _record.get(str(slide_number), {}).get("items", {})
     if result == "CLEARED":
+        if str(item_index) in items:
+            items[str(item_index)] = ""
         return (f"Cleared the text of item {item_index} on slide {slide_number} instead of deleting it: "
                 f"Keynote removes the title together with layout-provided shape slots, so the empty slot is left in place (it doesn't show on the slide).")
+    for k in sorted(int(k) for k in items):
+        if k == item_index:
+            del items[str(k)]
+        elif k > item_index:
+            items[str(k - 1)] = items.pop(str(k))
     return f"Deleted item {item_index} from slide {slide_number}"
 
 
@@ -581,6 +692,11 @@ def delete_slide(slide_number: int) -> str:
         end tell
     end tell
     ''')
+    for k in sorted(int(k) for k in _record):
+        if k == slide_number:
+            del _record[str(k)]
+        elif k > slide_number:
+            _record[str(k - 1)] = _record.pop(str(k))
     return f"Deleted slide {slide_number}; the deck now has {out} slide(s)"
 
 
@@ -595,7 +711,70 @@ def set_slide_layout(slide_number: int, layout: str = "", layout_index: int = 0)
         end tell
     end tell
     ''')
+    if str(slide_number) in _record:
+        _record[str(slide_number)]["items"] = {}
     return f"Slide {slide_number} now uses layout {note}"
+
+
+def field_label(field: str) -> str:
+    return field if field in ("title", "body") else f"text item {field}"
+
+
+@mcp.tool()
+def find_text_edits() -> str:
+    """Compare the front document's current text with the text this server last wrote into it (recorded when the deck was built or updated), and report every title, body, and text slot (e.g. subtitle) the user rewrote in Keynote since then, with both versions in full. Call this after open_presentation and BEFORE changing any text in an update, then ask the user, per edited slide, whether to keep their Keynote text or overwrite it with slides.md. Also reports slides that this server never wrote (e.g. added in Keynote) and recorded slides that no longer exist."""
+    if not _record:
+        return ("NO RECORD: there is no record of the text this plugin wrote into this deck (it was built before edit tracking, "
+                "or its record file was removed), so text edited in Keynote can't be told apart from slides.md changes.")
+    slides = describe_all_slides()
+    edits, unrecorded = [], []
+    for s in slides:
+        wrote = _record.get(str(s["number"]))
+        if wrote is None:
+            unrecorded.append(s["number"])
+            continue
+        now = current_texts(s)
+        fields = [f for f in ("title", "body") if f in wrote] + list(wrote.get("items", {}))
+        for f in fields:
+            before = wrote[f] if f in ("title", "body") else wrote["items"][f]
+            after = now.get(f) if f in ("title", "body") else now["items"].get(f)
+            if after is None:
+                edits.append(f"Slide {s['number']} {field_label(f)}: REMOVED in Keynote\n  wrote: {before!r}")
+            elif normalize(after) != normalize(before):
+                edits.append(f"Slide {s['number']} {field_label(f)}: EDITED in Keynote\n  wrote: {before!r}\n  now:   {after!r}")
+    missing = sorted(int(k) for k in _record if int(k) > len(slides))
+    lines = [f"{len(edits)} text edit(s) made in Keynote since this plugin last wrote the deck." if edits
+             else "No text was edited in Keynote since this plugin last wrote the deck."]
+    lines += edits
+    if unrecorded:
+        lines.append("Slides this plugin never wrote (probably added in Keynote): " + ", ".join(map(str, unrecorded)))
+    if missing:
+        lines.append(f"The record covers slides up to {max(missing)} but the deck has only {len(slides)} (slides deleted in Keynote?)")
+    if unrecorded or missing:
+        lines.append("Slides may have been added, deleted, or reordered in Keynote, so slides.md slide N may no longer match deck slide N — confirm the mapping with the user before writing.")
+    return "\n".join(lines)
+
+
+@mcp.tool()
+def accept_text_edits(slide_number: int = 0) -> str:
+    """Record the slide's current text (all slides when slide_number=0) as what the plugin last wrote, so text the user chose to KEEP isn't reported by find_text_edits again. Doesn't change the slide. Takes effect on disk at the next save_presentation."""
+    slides = describe_all_slides() if slide_number == 0 else [describe_slide(slide_number)]
+    for s in slides:
+        wrote = _record.get(str(s["number"]))
+        if wrote is None:
+            continue
+        now = current_texts(s)
+        for f in ("title", "body"):
+            if f in wrote and f in now:
+                wrote[f] = now[f]
+        items = wrote.get("items", {})
+        for f in list(items):
+            if f in now["items"]:
+                items[f] = now["items"][f]
+            else:
+                del items[f]
+    target = "every slide" if slide_number == 0 else f"slide {slide_number}"
+    return f"Accepted the current text of {target} as the baseline for find_text_edits"
 
 
 @mcp.tool()
@@ -608,6 +787,7 @@ def get_slide_count() -> int:
 def save_presentation() -> str:
     """Save the front presentation in place, to whatever path it's currently bound to (from create_presentation's `path`, open_presentation, or a prior save_as). Call this after every few slides, not just once at the end, so the file on disk stays current."""
     run_applescript('tell application "Keynote" to save front document')
+    save_record()
     return "Saved"
 
 
@@ -620,6 +800,9 @@ def save_as(path: str, overwrite: bool = False) -> str:
         save front document in POSIX file "{esc(path)}"
     end tell
     ''')
+    global _doc_path
+    _doc_path = os.path.realpath(path)
+    save_record()
     return f"Saved to {path}"
 
 

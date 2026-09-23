@@ -24,7 +24,7 @@ whose answer is already known (see the layout map in step 2).
 
 ## 0. Load the tools
 
-Call `ToolSearch` with `select:mcp__keynote-builder-mcp__create_presentation,mcp__keynote-builder-mcp__open_presentation,mcp__keynote-builder-mcp__list_slides,mcp__keynote-builder-mcp__list_layouts,mcp__keynote-builder-mcp__add_slide,mcp__keynote-builder-mcp__set_title,mcp__keynote-builder-mcp__set_body,mcp__keynote-builder-mcp__list_slide_items,mcp__keynote-builder-mcp__set_text_item,mcp__keynote-builder-mcp__add_image,mcp__keynote-builder-mcp__set_item_geometry,mcp__keynote-builder-mcp__delete_item,mcp__keynote-builder-mcp__delete_slide,mcp__keynote-builder-mcp__set_slide_layout,mcp__keynote-builder-mcp__save_presentation,mcp__keynote-builder-mcp__export_slide_images` in one call (the exact tool-name prefix may differ slightly depending on how this plugin's MCP server is exposed in the current session — check the available tool list if the names above don't match, and use whatever prefix wraps `keynote-builder-mcp__*`).
+Call `ToolSearch` with `select:mcp__keynote-builder-mcp__create_presentation,mcp__keynote-builder-mcp__open_presentation,mcp__keynote-builder-mcp__find_text_edits,mcp__keynote-builder-mcp__accept_text_edits,mcp__keynote-builder-mcp__list_slides,mcp__keynote-builder-mcp__list_layouts,mcp__keynote-builder-mcp__add_slide,mcp__keynote-builder-mcp__set_title,mcp__keynote-builder-mcp__set_body,mcp__keynote-builder-mcp__list_slide_items,mcp__keynote-builder-mcp__set_text_item,mcp__keynote-builder-mcp__add_image,mcp__keynote-builder-mcp__set_item_geometry,mcp__keynote-builder-mcp__delete_item,mcp__keynote-builder-mcp__delete_slide,mcp__keynote-builder-mcp__set_slide_layout,mcp__keynote-builder-mcp__save_presentation,mcp__keynote-builder-mcp__export_slide_images` in one call (the exact tool-name prefix may differ slightly depending on how this plugin's MCP server is exposed in the current session — check the available tool list if the names above don't match, and use whatever prefix wraps `keynote-builder-mcp__*`).
 
 If these tools aren't available, tell the user the Keynote MCP (`keynote-builder-mcp`)
 server from this plugin isn't running (macOS + Keynote.app required) and
@@ -64,7 +64,9 @@ that path, **ask the user every time** (with `AskQuestion` when available)
 whether to:
 
 - **Update** it — open it and change the text in place, keeping any
-  layout changes, moved images, and other edits they made in Keynote; or
+  layout changes, moved images, and other edits they made in Keynote
+  (text they rewrote in Keynote is kept or overwritten per slide, as they
+  choose — see 3b); or
 - **Rebuild** it — recreate it from the theme with `overwrite=true`
   (their manual edits are lost).
 
@@ -155,20 +157,42 @@ closest and mention the substitution in the final report.
 
 1. `open_presentation(path)` — returns every slide's number, layout, and
    title. Then `list_layouts()` if the map for this theme isn't known.
-2. Match `slides.md` slide N to deck slide N. Update only the text:
-   `set_title`, `set_body`, and `set_text_item` for subtitles. **Keep each
-   existing slide's layout, image positions, and other items as they are**
-   — the user may have adjusted them by hand in Keynote. Only change a
-   layout with `set_slide_layout` if the user explicitly asked for it.
-3. For images, add only those from `slides.md` that the slide doesn't
+2. **Check for text the user rewrote in Keynote** — call
+   `find_text_edits()` before writing any text. It compares the deck with
+   the text this plugin last wrote (kept in a hidden
+   `.<name>.key.keynote-builder.json` next to the `.key`).
+   - If it reports edits, show the user each edited slide with its Keynote
+     text and the new text from `slides.md`, and ask (with `AskQuestion`
+     when available, one question per edited slide, or one "keep all /
+     overwrite all" question when there are many) whether to **keep** the
+     Keynote text or **overwrite** it. For kept fields, don't call
+     `set_title` / `set_body` / `set_text_item` on them, and call
+     `accept_text_edits(N)` for those slides so they aren't reported again.
+     In the final report, mention that `slides.md` still has the old text
+     for kept verbatim slides (a rebuild would bring it back) and offer to
+     copy the kept text into `slides.md`.
+   - If it reports slides the plugin never wrote or missing slides, slides
+     were added, deleted, or reordered in Keynote: tell the user and agree
+     on which `slides.md` slide goes to which deck slide before writing.
+   - If it reports `NO RECORD`, edits can't be detected for this deck:
+     tell the user and ask whether to overwrite the text with `slides.md`
+     or stop, before writing anything.
+3. Match `slides.md` slide N to deck slide N. Update only the text:
+   `set_title`, `set_body`, and `set_text_item` for subtitles. These skip
+   the write when the text is already identical, so the user's formatting
+   on unchanged text survives. **Keep each existing slide's layout, image
+   positions, and other items as they are** — the user may have adjusted
+   them by hand in Keynote. Only change a layout with `set_slide_layout`
+   if the user explicitly asked for it.
+4. For images, add only those from `slides.md` that the slide doesn't
    already have (check with `list_slide_items`); don't move or re-add
    existing ones.
-4. If `slides.md` now has more slides, add them at the end with
+5. If `slides.md` now has more slides, add them at the end with
    `add_slide(layout_index=…)` as in 3a. If the deck has extra slides that
    `slides.md` no longer has, list them and ask the user before calling
    `delete_slide` (delete from the highest number down so the numbers don't
    shift under you).
-5. `save_presentation()` when done.
+6. `save_presentation()` when done.
 
 Known quirk: the Keynote window can still show a "keep this new document?"
 prompt if the user closes it by hand. That's cosmetic — the file on disk

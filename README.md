@@ -76,7 +76,12 @@ Then:
 3. Running it again when the `.key` already exists: Claude asks whether
    to **update** the file in place (keeping the layout changes and image
    moves you made in Keynote) or **rebuild** it from scratch. It never
-   overwrites a file without asking.
+   overwrites a file without asking. When updating, Claude also finds any
+   text you rewrote in Keynote and asks, slide by slide, whether to keep
+   your text or replace it with `slides.md`. To tell your edits apart from
+   its own, the plugin keeps a small hidden file next to the deck
+   (`.<name>.key.keynote-builder.json`); deleting it just turns this check
+   off for that deck.
 
 ## Notes
 
