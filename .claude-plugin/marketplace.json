@@ -4,7 +4,7 @@
   "description": "Claude plugins by yumemi narawa",
   "plugins": [
     {
-      "name": "keynote-builder",
+      "name": "md-to-keynote",
       "source": "./",
       "description": "Build Keynote decks from Markdown using the theme's real placeholders.",
       "category": "productivity"

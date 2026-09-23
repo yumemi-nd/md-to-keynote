@@ -1,5 +1,5 @@
 {
-  "name": "keynote-builder",
+  "name": "md-to-keynote",
   "version": "1.0.0",
   "description": "Build Keynote (.key) decks that use the theme's real title/body placeholders instead of freeform text boxes, so slides inherit the theme's registered fonts, colors, and bullet styles automatically — no manual font-size or position tuning. Supports a Marp-like slides.md format for specifying exact per-slide content. Requires macOS + Keynote.app + uv.",
   "keywords": ["keynote", "slides", "presentation", "macos", "applescript"],
@@ -8,7 +8,7 @@
     "email": "yumemi@narawadesign.jp",
     "url": "https://github.com/yumemi-nd"
   },
-  "homepage": "https://github.com/yumemi-nd/keynote-builder",
-  "repository": "https://github.com/yumemi-nd/keynote-builder",
+  "homepage": "https://github.com/yumemi-nd/md-to-keynote",
+  "repository": "https://github.com/yumemi-nd/md-to-keynote",
   "license": "MIT"
 }

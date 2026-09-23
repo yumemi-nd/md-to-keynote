@@ -3,7 +3,7 @@
 # dependencies = ["mcp<2.0.0"]
 # ///
 """
-Keynote MCP (keynote-builder-mcp): a minimal Keynote MCP server that drives the theme's REAL
+Keynote MCP (md-to-keynote-mcp): a minimal Keynote MCP server that drives the theme's REAL
 title/body placeholders (default title item / default body item) instead of
 freeform text boxes, so slides inherit the theme's registered font sizes,
 colors, and bullet styles automatically.
@@ -18,7 +18,7 @@ from typing import Optional
 
 from mcp.server.fastmcp import FastMCP
 
-mcp = FastMCP("keynote-builder-mcp")
+mcp = FastMCP("md-to-keynote-mcp")
 
 RS = "\x1e"
 FS = "\x1f"
@@ -86,7 +86,7 @@ _record: dict = {}
 
 def record_file(key_path: str) -> str:
     folder, name = os.path.split(os.path.realpath(key_path))
-    return os.path.join(folder, f".{name}.keynote-builder.json")
+    return os.path.join(folder, f".{name}.md-to-keynote.json")
 
 
 def load_record(key_path: str) -> None:

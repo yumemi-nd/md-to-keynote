@@ -1,14 +1,14 @@
 ---
 name: keynote-slide-builder
-description: This skill should be used when the user asks to "build a Keynote deck", "create Keynote slides", "make a .key presentation", "update my Keynote deck", or wants a Keynote deck generated from a Marp-like slides.md file, without manually tuning font sizes or text-box positions. Requires macOS with Keynote.app and the bundled Keynote MCP server (keynote-builder-mcp).
+description: This skill should be used when the user asks to "build a Keynote deck", "create Keynote slides", "make a .key presentation", "update my Keynote deck", or wants a Keynote deck generated from a Marp-like slides.md file, without manually tuning font sizes or text-box positions. Requires macOS with Keynote.app and the bundled Keynote MCP server (md-to-keynote-mcp).
 metadata:
   version: "1"
 ---
 
 # Keynote Slide Builder
 
-Build Keynote presentations using the Keynote MCP server (`keynote-builder-mcp`) bundled
-with this plugin (tools appear as `mcp__keynote-builder-mcp__*`), which sets text
+Build Keynote presentations using the Keynote MCP server (`md-to-keynote-mcp`) bundled
+with this plugin (tools appear as `mcp__md-to-keynote-mcp__*`), which sets text
 on a slide's REAL title/body placeholders (`default title item` / `default
 body item`) and the layout's other text slots (e.g. subtitles) via AppleScript.
 This means slides automatically inherit the theme's registered font sizes,
@@ -24,9 +24,9 @@ whose answer is already known (see the layout map in step 2).
 
 ## 0. Load the tools
 
-Call `ToolSearch` with `select:mcp__keynote-builder-mcp__create_presentation,mcp__keynote-builder-mcp__open_presentation,mcp__keynote-builder-mcp__find_text_edits,mcp__keynote-builder-mcp__accept_text_edits,mcp__keynote-builder-mcp__list_slides,mcp__keynote-builder-mcp__list_layouts,mcp__keynote-builder-mcp__add_slide,mcp__keynote-builder-mcp__set_title,mcp__keynote-builder-mcp__set_body,mcp__keynote-builder-mcp__list_slide_items,mcp__keynote-builder-mcp__set_text_item,mcp__keynote-builder-mcp__add_image,mcp__keynote-builder-mcp__set_item_geometry,mcp__keynote-builder-mcp__delete_item,mcp__keynote-builder-mcp__delete_slide,mcp__keynote-builder-mcp__set_slide_layout,mcp__keynote-builder-mcp__save_presentation,mcp__keynote-builder-mcp__export_slide_images` in one call (the exact tool-name prefix may differ slightly depending on how this plugin's MCP server is exposed in the current session — check the available tool list if the names above don't match, and use whatever prefix wraps `keynote-builder-mcp__*`).
+Call `ToolSearch` with `select:mcp__md-to-keynote-mcp__create_presentation,mcp__md-to-keynote-mcp__open_presentation,mcp__md-to-keynote-mcp__find_text_edits,mcp__md-to-keynote-mcp__accept_text_edits,mcp__md-to-keynote-mcp__list_slides,mcp__md-to-keynote-mcp__list_layouts,mcp__md-to-keynote-mcp__add_slide,mcp__md-to-keynote-mcp__set_title,mcp__md-to-keynote-mcp__set_body,mcp__md-to-keynote-mcp__list_slide_items,mcp__md-to-keynote-mcp__set_text_item,mcp__md-to-keynote-mcp__add_image,mcp__md-to-keynote-mcp__set_item_geometry,mcp__md-to-keynote-mcp__delete_item,mcp__md-to-keynote-mcp__delete_slide,mcp__md-to-keynote-mcp__set_slide_layout,mcp__md-to-keynote-mcp__save_presentation,mcp__md-to-keynote-mcp__export_slide_images` in one call (the exact tool-name prefix may differ slightly depending on how this plugin's MCP server is exposed in the current session — check the available tool list if the names above don't match, and use whatever prefix wraps `md-to-keynote-mcp__*`).
 
-If these tools aren't available, tell the user the Keynote MCP (`keynote-builder-mcp`)
+If these tools aren't available, tell the user the Keynote MCP (`md-to-keynote-mcp`)
 server from this plugin isn't running (macOS + Keynote.app required) and
 stop.
 
@@ -160,7 +160,7 @@ closest and mention the substitution in the final report.
 2. **Check for text the user rewrote in Keynote** — call
    `find_text_edits()` before writing any text. It compares the deck with
    the text this plugin last wrote (kept in a hidden
-   `.<name>.key.keynote-builder.json` next to the `.key`).
+   `.<name>.key.md-to-keynote.json` next to the `.key`).
    - If it reports edits, show the user each edited slide with its Keynote
      text and the new text from `slides.md`, and ask (with `AskQuestion`
      when available, one question per edited slide, or one "keep all /

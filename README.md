@@ -1,4 +1,4 @@
-# Keynote Builder
+# MD to Keynote
 
 A plugin that lets Claude build Keynote slides for you.
 
@@ -30,12 +30,12 @@ A plugin that lets Claude build Keynote slides for you.
 1. In Claude Code, run:
 
    ```
-   /plugin marketplace add yumemi-nd/keynote-builder
-   /plugin install keynote-builder@narawa-design-plugins
+   /plugin marketplace add yumemi-nd/md-to-keynote
+   /plugin install md-to-keynote@narawa-design-plugins
    ```
 
 2. Restart Claude Code, or run `/reload-plugins`.
-3. Run `/mcp` and check that `keynote-builder-mcp` is listed as connected.
+3. Run `/mcp` and check that `md-to-keynote-mcp` is listed as connected.
    If it isn't, see [Troubleshooting](#troubleshooting).
 
 The first time Claude opens Keynote, macOS asks whether to allow it to
@@ -46,7 +46,7 @@ To update to a new version later, run
 
 ## Quick start
 
-1. Download the template [`slides.md`](https://github.com/yumemi-nd/keynote-builder/blob/main/skills/keynote-slide-builder/references/slides.md)
+1. Download the template [`slides.md`](https://github.com/yumemi-nd/md-to-keynote/blob/main/skills/keynote-slide-builder/references/slides.md)
    and put it in your project folder.
 2. Set `theme` at the top to a theme name exactly as it appears in
    Keynote's theme chooser (e.g. `Basic White`, or `ベーシックホワイト` if
@@ -74,7 +74,7 @@ To change the mode or layout of a single slide, put `<!-- mode: generate -->`
 or `<!-- layout: section -->` at the top of that slide.
 
 For every setting, layout name, and rule, see the
-[full guide](https://github.com/yumemi-nd/keynote-builder/blob/main/skills/keynote-slide-builder/references/slides-guide.md).
+[full guide](https://github.com/yumemi-nd/md-to-keynote/blob/main/skills/keynote-slide-builder/references/slides-guide.md).
 
 ## Updating a deck
 
@@ -86,13 +86,13 @@ If the `.key` already exists, Claude asks whether to:
 - **Rebuild** it — starts over from the theme. Your Keynote edits are lost.
 
 To tell your edits apart from its own, the plugin keeps a small hidden file
-next to the deck (`.<name>.key.keynote-builder.json`). If you delete it,
+next to the deck (`.<name>.key.md-to-keynote.json`). If you delete it,
 Claude can no longer detect text edits for that deck and asks before
 overwriting any text.
 
 ## Troubleshooting
 
-- **`keynote-builder-mcp` doesn't connect**: check that `uv --version`
+- **`md-to-keynote-mcp` doesn't connect**: check that `uv --version`
   works in Terminal. If it does but the server still fails, set the
   server's `command` to the full path of `uv` (e.g. `~/.local/bin/uv`) in
   your MCP settings.

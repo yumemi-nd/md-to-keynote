@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-    "keynote-builder-mcp": {
+    "md-to-keynote-mcp": {
       "command": "uv",
       "args": [
         "run",
