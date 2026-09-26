@@ -51,8 +51,7 @@ To update to a new version later, run
 1. Download the template [`slides.md`](https://github.com/yumemi-nd/md-to-keynote/blob/main/skills/md-to-keynote/slides.md)
    and put it in your project folder.
 2. Set `theme` at the top to a theme name exactly as it appears in
-   Keynote's theme chooser (e.g. `Basic White`, or `ベーシックホワイト` if
-   Keynote is in Japanese). Replace the example slides with your own.
+   Keynote's theme chooser (e.g. `Basic White`, or `ベーシックホワイト`). Replace the example slides with your own.
 3. Ask Claude: "Build a Keynote deck from this slides.md."
 
 Claude saves the `.key` next to `slides.md` (or wherever `output` says),
@@ -103,6 +102,14 @@ overwriting any text.
 - **Text looks cramped**: the plugin never shrinks fonts, so the theme's
   placeholder is too small for that much text. Shorten the text, or set a
   limit in `text_rules`.
+
+## Development
+
+The tests replace AppleScript with a fake, so they run without Keynote:
+
+```
+uv run --with "mcp>=1.10.0,<2.0.0" --with pytest pytest tests
+```
 
 ## Credits & Support
 

@@ -1,6 +1,6 @@
 # /// script
 # requires-python = ">=3.10"
-# dependencies = ["mcp<2.0.0"]
+# dependencies = ["mcp>=1.10.0,<2.0.0"]
 # ///
 """
 Keynote MCP (md-to-keynote-mcp): a minimal Keynote MCP server that drives the theme's REAL
@@ -17,8 +17,19 @@ import tempfile
 from typing import Optional
 
 from mcp.server.fastmcp import FastMCP
+from mcp.types import ToolAnnotations
 
 mcp = FastMCP("md-to-keynote-mcp")
+
+
+def hints(*, read_only: bool, destructive: bool, idempotent: bool) -> ToolAnnotations:
+    """Tool annotations with all four hints set explicitly. Every tool only drives the
+    local Keynote.app and local files, never an external service, so openWorldHint is False.
+    destructive=True means the tool can overwrite or remove existing content (slide text,
+    slides, items, or files on disk); idempotent=True means repeating the same call has no
+    further effect."""
+    return ToolAnnotations(readOnlyHint=read_only, destructiveHint=destructive,
+                           idempotentHint=idempotent, openWorldHint=False)
 
 RS = "\x1e"
 FS = "\x1f"
@@ -318,7 +329,7 @@ def close_documents_at(path: str) -> None:
     ''')
 
 
-@mcp.tool()
+@mcp.tool(annotations=hints(read_only=False, destructive=True, idempotent=False))
 def create_presentation(title: str, theme: str = "", path: str = "", overwrite: bool = False) -> str:
     """Create a new Keynote presentation. `theme` should match a theme name exactly as shown in Keynote's theme chooser (e.g. 'Basic White' / 'ベーシックホワイト'). `path` (recommended): an absolute POSIX path ending in .key — if given, the presentation is saved there immediately. If a file already exists at `path` this FAILS unless `overwrite=true`; ask the user first whether to update the existing file with open_presentation instead. NOTE: Keynote creates slide 1 automatically — use it for the first slide instead of calling add_slide."""
     if path:
@@ -350,7 +361,7 @@ def create_presentation(title: str, theme: str = "", path: str = "", overwrite: 
     return msg
 
 
-@mcp.tool()
+@mcp.tool(annotations=hints(read_only=False, destructive=False, idempotent=True))
 def open_presentation(path: str) -> str:
     """Open an existing .key file (absolute POSIX path) and make it the front document, so later tools update it in place instead of rebuilding from the theme. Returns every slide's number, layout, and title. Before changing any text, call find_text_edits to see which text the user rewrote in Keynote."""
     if not os.path.exists(path):
@@ -365,13 +376,13 @@ def open_presentation(path: str) -> str:
     return "Opened " + path + "\n" + slides_summary()
 
 
-@mcp.tool()
+@mcp.tool(annotations=hints(read_only=True, destructive=False, idempotent=True))
 def list_slides() -> str:
     """List every slide in the front document: number, layout name, and title text (or '(title hidden)')."""
     return slides_summary()
 
 
-@mcp.tool()
+@mcp.tool(annotations=hints(read_only=False, destructive=False, idempotent=True))
 def list_layouts(detail: bool = True) -> str:
     """List the theme's layouts (master slides) with their 1-based index. With detail=true (default) each layout also reports whether its title and body placeholders are shown or hidden, its extra text slots (e.g. a subtitle — empty, or pre-filled with the layout's sample text such as 'Subtitle' / 'サブタイトル' that stays VISIBLE until replaced), its image placeholders, and any fixed text the layout itself draws (e.g. a footer — often the only difference between same-named layouts). Layouts can share a name; use the index with add_slide/set_slide_layout's `layout_index` to pick an exact one. detail=true briefly adds and removes a temporary slide per layout (a few seconds); cache the result per theme."""
     if not detail:
@@ -455,7 +466,7 @@ def list_layouts(detail: bool = True) -> str:
     return "\n".join(lines)
 
 
-@mcp.tool()
+@mcp.tool(annotations=hints(read_only=False, destructive=False, idempotent=False))
 def add_slide(layout: str = "", layout_index: int = 0) -> str:
     """Add a new slide at the end of the presentation. Pick the layout by `layout_index` (1-based index from list_layouts — exact, even when names repeat) or by `layout` name (the first layout with that name); leave both blank for the theme's default layout."""
     if layout or layout_index:
@@ -509,19 +520,19 @@ def set_placeholder(slide_number: int, which: str, text: str, show: bool) -> str
     return f"Set {which} on slide {slide_number}" + (" (turned it on)" if show else "")
 
 
-@mcp.tool()
+@mcp.tool(annotations=hints(read_only=False, destructive=True, idempotent=True))
 def set_title(slide_number: int, text: str, show: bool = False) -> str:
     """Set the slide's REAL title placeholder text. Inherits the theme's registered title font/size/color automatically — do not set font size manually. If the layout hides the title, nothing is written and the result says so; pass show=true to turn the title on and write it."""
     return set_placeholder(slide_number, "title", text, show)
 
 
-@mcp.tool()
+@mcp.tool(annotations=hints(read_only=False, destructive=True, idempotent=True))
 def set_body(slide_number: int, text: str, show: bool = False) -> str:
     """Set the slide's REAL body/bullet placeholder text. Pass items separated by newlines (\\n); Keynote applies the theme's bullet style automatically. Inherits the theme's registered body font/size/color — do not set font size manually. If the layout hides the body, nothing is written and the result says so; pass show=true to turn the body on and write it."""
     return set_placeholder(slide_number, "body", text, show)
 
 
-@mcp.tool()
+@mcp.tool(annotations=hints(read_only=True, destructive=False, idempotent=True))
 def list_slide_items(slide_number: int) -> str:
     """List every item on a slide with its 1-based item index, role, position, and size. Roles: title / body (the real placeholders — use set_title/set_body), text_slot_empty (an empty text slot such as a subtitle), text_slot_sample (a slot still holding the layout's sample text like 'Subtitle' / 'サブタイトル', which IS visible on the slide), text, image, slide_number. Also reports whether the layout's title/body are shown or hidden. Use the index with set_text_item, set_item_geometry, and delete_item; re-list after adding or deleting items because indexes shift."""
     s = describe_slide(slide_number)
@@ -530,7 +541,7 @@ def list_slide_items(slide_number: int) -> str:
     return "\n".join([head] + [format_item(it) for it in s["items"]])
 
 
-@mcp.tool()
+@mcp.tool(annotations=hints(read_only=False, destructive=True, idempotent=True))
 def set_text_item(slide_number: int, item_index: int, text: str) -> str:
     """Set the text of any text slot on a slide by its item index from list_slide_items — e.g. the subtitle slot (text_slot_empty or text_slot_sample). Refuses the title and body placeholders (use set_title/set_body) so a subtitle can't overwrite the title by accident. Text inherits the slot's theme style."""
     result = run_applescript(f'''
@@ -568,7 +579,7 @@ def set_text_item(slide_number: int, item_index: int, text: str) -> str:
     return f"Set text of item {item_index} on slide {slide_number}"
 
 
-@mcp.tool()
+@mcp.tool(annotations=hints(read_only=False, destructive=False, idempotent=False))
 def add_image(slide_number: int, image_path: str, x: Optional[float] = None, y: Optional[float] = None,
               width: Optional[float] = None, height: Optional[float] = None) -> str:
     """Place an image file (by absolute POSIX path) onto a slide. Without x/y/width/height it uses Keynote's default placement; pass any of them to position/size it right away (points, origin top-left; setting only width or height keeps the aspect ratio). Returns the image's item index and geometry, and warns if it overlaps the title, body, or other text so you can fix it with set_item_geometry."""
@@ -627,7 +638,7 @@ def report_item(slide_number: int, item_index: int, verb: str) -> str:
     return msg
 
 
-@mcp.tool()
+@mcp.tool(annotations=hints(read_only=False, destructive=True, idempotent=True))
 def set_item_geometry(slide_number: int, item_index: int, x: Optional[float] = None, y: Optional[float] = None,
                       width: Optional[float] = None, height: Optional[float] = None) -> str:
     """Move and/or resize an item (image, text slot, placeholder) by its index from list_slide_items. Only the values you pass change; units are points with the origin at the slide's top-left. Images keep their aspect ratio, so setting width may also change height. Returns the new geometry and warns about overlaps with text."""
@@ -635,7 +646,7 @@ def set_item_geometry(slide_number: int, item_index: int, x: Optional[float] = N
     return report_item(slide_number, item_index, "Updated item")
 
 
-@mcp.tool()
+@mcp.tool(annotations=hints(read_only=False, destructive=True, idempotent=False))
 def delete_item(slide_number: int, item_index: int) -> str:
     """Delete an item from a slide by its index from list_slide_items (e.g. a misplaced image, or a layout sample text such as 'Subtitle' / 'サブタイトル' you don't want). For the title or body placeholder this hides it (title/body showing = off) instead of deleting it. Layout-provided slots of class 'shape' are emptied instead of deleted, because Keynote deletes the title along with them; an empty slot doesn't show on the slide. Indexes of later items shift after a real deletion."""
     result = run_applescript(f'''
@@ -681,7 +692,7 @@ def delete_item(slide_number: int, item_index: int) -> str:
     return f"Deleted item {item_index} from slide {slide_number}"
 
 
-@mcp.tool()
+@mcp.tool(annotations=hints(read_only=False, destructive=True, idempotent=False))
 def delete_slide(slide_number: int) -> str:
     """Delete a slide. Later slides move up by one number."""
     out = run_applescript(f'''
@@ -700,7 +711,7 @@ def delete_slide(slide_number: int) -> str:
     return f"Deleted slide {slide_number}; the deck now has {out} slide(s)"
 
 
-@mcp.tool()
+@mcp.tool(annotations=hints(read_only=False, destructive=True, idempotent=True))
 def set_slide_layout(slide_number: int, layout: str = "", layout_index: int = 0) -> str:
     """Change an existing slide's layout, by `layout_index` (exact, from list_layouts) or `layout` name. Title/body text is kept; check the result with list_slide_items, since the new layout may add sample text slots or hide the body."""
     ref, note = resolve_layout(layout, layout_index)
@@ -720,7 +731,7 @@ def field_label(field: str) -> str:
     return field if field in ("title", "body") else f"text item {field}"
 
 
-@mcp.tool()
+@mcp.tool(annotations=hints(read_only=True, destructive=False, idempotent=True))
 def find_text_edits() -> str:
     """Compare the front document's current text with the text this server last wrote into it (recorded when the deck was built or updated), and report every title, body, and text slot (e.g. subtitle) the user rewrote in Keynote since then, with both versions in full. Call this after open_presentation and BEFORE changing any text in an update, then ask the user, per edited slide, whether to keep their Keynote text or overwrite it with slides.md. Also reports slides that this server never wrote (e.g. added in Keynote) and recorded slides that no longer exist."""
     if not _record:
@@ -755,7 +766,7 @@ def find_text_edits() -> str:
     return "\n".join(lines)
 
 
-@mcp.tool()
+@mcp.tool(annotations=hints(read_only=False, destructive=True, idempotent=True))
 def accept_text_edits(slide_number: int = 0) -> str:
     """Record the slide's current text (all slides when slide_number=0) as what the plugin last wrote, so text the user chose to KEEP isn't reported by find_text_edits again. Doesn't change the slide. Takes effect on disk at the next save_presentation."""
     slides = describe_all_slides() if slide_number == 0 else [describe_slide(slide_number)]
@@ -777,13 +788,13 @@ def accept_text_edits(slide_number: int = 0) -> str:
     return f"Accepted the current text of {target} as the baseline for find_text_edits"
 
 
-@mcp.tool()
+@mcp.tool(annotations=hints(read_only=True, destructive=False, idempotent=True))
 def get_slide_count() -> int:
     """Return the number of slides in the front document."""
     return int(run_applescript('tell application "Keynote" to return (count of slides of front document) as string'))
 
 
-@mcp.tool()
+@mcp.tool(annotations=hints(read_only=False, destructive=True, idempotent=True))
 def save_presentation() -> str:
     """Save the front presentation in place, to whatever path it's currently bound to (from create_presentation's `path`, open_presentation, or a prior save_as). Call this after every few slides, not just once at the end, so the file on disk stays current."""
     run_applescript('tell application "Keynote" to save front document')
@@ -791,7 +802,7 @@ def save_presentation() -> str:
     return "Saved"
 
 
-@mcp.tool()
+@mcp.tool(annotations=hints(read_only=False, destructive=True, idempotent=True))
 def save_as(path: str, overwrite: bool = False) -> str:
     """Save the front presentation as a .key file at the given absolute POSIX path. Fails if a file already exists there unless overwrite=true. Prefer passing `path` to create_presentation instead so the document is file-backed from the start; use this only to change the save location later."""
     check_target_path(path, overwrite)
@@ -806,7 +817,7 @@ def save_as(path: str, overwrite: bool = False) -> str:
     return f"Saved to {path}"
 
 
-@mcp.tool()
+@mcp.tool(annotations=hints(read_only=False, destructive=True, idempotent=True))
 def export_pdf(path: str) -> str:
     """Export the front presentation as a single PDF to the given absolute POSIX path. Note: PDF export has been unreliable for visual verification in some environments (pages sometimes render blank when read back) — prefer export_slide_images for checking layout."""
     script = f'''
@@ -818,7 +829,7 @@ def export_pdf(path: str) -> str:
     return f"Exported PDF to {path}"
 
 
-@mcp.tool()
+@mcp.tool(annotations=hints(read_only=False, destructive=True, idempotent=False))
 def export_slide_images(folder_path: str = "") -> str:
     """Export every slide as a separate image for visual verification and return the absolute path of each file, in slide order. Leave `folder_path` blank to export into a fresh folder in the system temp directory (nothing to clean up in the project folder). Read back only the slides you need to check, not every file, to save tokens."""
     folder = folder_path or tempfile.mkdtemp(prefix="keynote-verify-")

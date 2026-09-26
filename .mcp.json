@@ -4,7 +4,7 @@
       "command": "uv",
       "args": [
         "run",
-        "--with", "mcp<2.0.0",
+        "--with", "mcp>=1.10.0,<2.0.0",
         "${CLAUDE_PLUGIN_ROOT}/mcp-server/keynote_slides_server.py"
       ]
     }
